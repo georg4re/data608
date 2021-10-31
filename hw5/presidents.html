@@ -73,7 +73,8 @@
         }
 
         function loadPresidents() { 
-            var parsedCSV;
+            document.getElementById("presidents_table").innerHTML = "";
+
             d3.text("/hw5/data/presidents.csv", function(data) {
                 parsedCSV = d3.csv.parseRows(data);
 
