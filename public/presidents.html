@@ -74,7 +74,7 @@
 
         function loadPresidents() { 
             var parsedCSV;
-            d3.text("/hw5/data/presidents.csv", function(data) {
+            d3.text("/data/presidents.csv", function(data) {
                 parsedCSV = d3.csv.parseRows(data);
 
                 var container = d3.select("#presidents_table")
