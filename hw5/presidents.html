@@ -28,7 +28,7 @@
     </div>
     
     <div class="menu">
-        <a href="/hw5/">Multiplication Table</a>
+        <a href="/data608/hw5/">Multiplication Table</a>
     </div>
 
     <div id="presidents_load" class="container">
@@ -75,7 +75,7 @@
         function loadPresidents() { 
             document.getElementById("presidents_table").innerHTML = "";
 
-            d3.text("/hw5/data/presidents.csv", function(data) {
+            d3.text("/data608/hw5/data/presidents.csv", function(data) {
                 parsedCSV = d3.csv.parseRows(data);
 
                 var container = d3.select("#presidents_table")
