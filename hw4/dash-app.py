@@ -50,6 +50,7 @@ app.layout = html.Div(children=[
         html.Div(className='four columns div-user-controls',
             children=[
                 html.H2("HW4 - Tree's Health Tracker"),
+                html.H5('''By George Cruz'''),
                 html.P('''Visualising NYC Trees health with Plotly - Dash'''),
                 html.P('''Pick any tree species from the dropdown below.'''),
                 html.Div(
