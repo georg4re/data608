@@ -1,0 +1,153 @@
+---
+title: "Final Project ' Visualizations"
+author: "George Cruz"
+date: "11/28/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Visualizations
+```{r}
+library(here)
+library(dplyr)
+library(ggplot2)
+library(readr)
+```
+
+```{r}
+
+covid_data <- read_csv(here('data', 
+                            'processed_data',
+                            'cases_data_plus_mandates-2.csv'), 
+                       col_types = list(
+  X1 = col_double(),
+  X = col_double(),
+  state = col_character(),
+  cases = col_double(),
+  deaths = col_double(),
+  new_cases = col_double(),
+  new_deaths = col_double(),
+  mask_mandate = col_character(),
+  date = col_date(format = ""),
+  fine_enforced = col_logical(),
+  charge_enforced = col_logical(),
+  not_enforced = col_logical(),
+  mandate_start = col_date(format = ""),
+  mandate_start_2 = col_date(format = ""),
+  mandate_end = col_date(format = ""),
+  mandate_end_2 = col_date(format = "")
+  )) 
+
+state <- covid_data %>% 
+  group_by(state) %>% 
+  mutate(days = date - first(date) + 1)
+
+# Aggregate at world level
+us_data <- state %>% 
+  group_by(date) %>% 
+  summarize(new_cases=sum(new_cases), 
+            cases=sum(cases), 
+            new_deaths=sum(new_deaths), 
+            deaths = sum(deaths)) %>% 
+  mutate(days = date - first(date) + 1)
+
+# Extract specific country: Alabama
+alabama <- state %>% 
+  filter(state == "Alabama")
+
+new_york <- covid_data %>%
+  filter(state =="New York")
+```
+
+# SUMMARY STATISTICS
+```{r}
+summary(covid_data)
+by(covid_data$new_cases, covid_data$state, summary)
+by(covid_data$cases, covid_data$state, summary)
+by(covid_data$new_deaths, covid_data$state, summary)
+summary(covid_data)
+summary(alabama)
+```
+ 
+
+# GRAPHS
+## Barchart of cases over time
+
+### covid_data new_cases
+
+```{r}
+ggplot(state, 
+       aes(x=date, y=new_cases)) + 
+  geom_bar(stat="identity", width=0.1) +
+  theme_classic() +
+  labs(title = "Covid-19 US New Cases", 
+       x= "Date", 
+       y= "Daily confirmed cases") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+### Alabama Daily Cases
+```{r}
+ggplot(alabama, 
+       aes(x=date, y=new_cases)) + 
+  geom_bar(stat="identity", width=0.1) +
+  theme_classic() +
+  labs(title = "Covid-19 Confirmed Cases in Alabama", 
+       x= "Date", 
+       y= "Daily confirmed cases") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+# covid_data new_cases, new_deaths
+```{r}
+state %>% gather("Type", "Cases", c(new_cases, new_deaths)) %>%
+ggplot(aes(x=date, y=Cases, colour=Type)) + 
+  geom_bar(stat="identity", width=0.2, fill="white") +
+  theme_classic() +
+  labs(title = "Covid-19 US Cases", x= "Date", y= "Daily cases") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+# Line graph of cases over time
+# covid_data new_cases
+ggplot(covid_data, aes(x=days, y=new_cases)) + geom_line() +
+  theme_classic() +
+  labs(title = "Covid-19 Global new_cases Cases", x= "Days", y= "Daily new_cases cases") +
+  theme(plot.title = element_text(hjust = 0.5))
+# Ignore warning
+
+# covid_data new_cases with counts in log10 scale
+ggplot(covid_data, aes(x=days, y=new_cases)) + geom_line() +
+  theme_classic() +
+  labs(title = "Covid-19 Global new_cases Cases", x= "Days", y= "Daily new_cases cases  (log scale)") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(trans="log10")
+
+# covid_data new_cases, new_deaths and recovered
+str(covid_data)
+covid_data %>% gather("Type", "Cases", -c(date, days)) %>%
+ggplot(aes(x=days, y=Cases, colour=Type)) + geom_line() +
+  theme_classic() +
+  labs(title = "Covid-19 Global Cases", x= "Days", y= "Daily cases") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# new_cases by covid_data for select countries with counts in log10 scale
+covid_dataselection <- covid_data %>% filter(state==c("US", "Alabama", "China", "France", "United Kingdom", "Germany"))
+ggplot(covid_dataselection, aes(x=days, y=new_cases, colour=state)) + geom_line(size=1) +
+  theme_classic() +
+  labs(title = "Covid-19 new_cases Cases by covid_data", x= "Days", y= "Daily new_cases cases (log scale)") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(trans="log10")
+
+# Matrix of line graphs of new_cases, new_deaths and recovered for select countries in log10 scale
+str(covid_dataselection)
+covid_dataselection %>% gather("Type", "Cases", -c(date, days, state)) %>%
+ggplot(aes(x=days, y=Cases, colour=state)) + geom_line(size=1) +
+  theme_classic() +
+  labs(title = "Covid-19 Cases by covid_data", x= "Days", y= "Daily cases (log scale)") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_y_continuous(trans="log10") +
+  facet_grid(rows=vars(Type))

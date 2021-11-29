@@ -43,7 +43,7 @@ As an alternative comparison, I could compare the cases data with vaccination ra
 5. State projection of vaccination rates in reduction/increase of cases
 
 ### Getting the Data
-```{r cars}
+```{r}
 library(here)
 library(dplyr)
 ```
