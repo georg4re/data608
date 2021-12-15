@@ -6,7 +6,11 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
 ```
 
 ## Visualizations
@@ -15,6 +19,7 @@ library(here)
 library(dplyr)
 library(ggplot2)
 library(readr)
+library(tidyr)
 ```
 
 ```{r}
@@ -41,6 +46,7 @@ covid_data <- read_csv(here('data',
   mandate_end_2 = col_date(format = "")
   )) 
 
+covid_data <- covid_data %>% filter(new_cases > 0)
 state <- covid_data %>% 
   group_by(state) %>% 
   mutate(days = date - first(date) + 1)
@@ -64,10 +70,10 @@ new_york <- covid_data %>%
 
 # SUMMARY STATISTICS
 ```{r}
-summary(covid_data)
-by(covid_data$new_cases, covid_data$state, summary)
-by(covid_data$cases, covid_data$state, summary)
-by(covid_data$new_deaths, covid_data$state, summary)
+#summary(covid_data)
+#by(covid_data$new_cases, covid_data$state, summary)
+#by(covid_data$cases, covid_data$state, summary)
+#by(covid_data$new_deaths, covid_data$state, summary)
 summary(covid_data)
 summary(alabama)
 ```
@@ -80,7 +86,7 @@ summary(alabama)
 
 ```{r}
 ggplot(state, 
-       aes(x=date, y=new_cases)) + 
+       aes(x=date, y=cases)) + 
   geom_bar(stat="identity", width=0.1) +
   theme_classic() +
   labs(title = "Covid-19 US New Cases", 
@@ -92,7 +98,7 @@ ggplot(state,
 ### Alabama Daily Cases
 ```{r}
 ggplot(alabama, 
-       aes(x=date, y=new_cases)) + 
+       aes(x=date, y=cases)) + 
   geom_bar(stat="identity", width=0.1) +
   theme_classic() +
   labs(title = "Covid-19 Confirmed Cases in Alabama", 
@@ -103,7 +109,7 @@ ggplot(alabama,
 
 # covid_data new_cases, new_deaths
 ```{r}
-state %>% gather("Type", "Cases", c(new_cases, new_deaths)) %>%
+state %>% gather("Type", "Cases", c(cases, deaths)) %>%
 ggplot(aes(x=date, y=Cases, colour=Type)) + 
   geom_bar(stat="identity", width=0.2, fill="white") +
   theme_classic() +
@@ -113,41 +119,213 @@ ggplot(aes(x=date, y=Cases, colour=Type)) +
 
 # Line graph of cases over time
 # covid_data new_cases
-ggplot(covid_data, aes(x=days, y=new_cases)) + geom_line() +
+```{r}
+ggplot(us_data, aes(x=days, y=cases)) + 
+  geom_line() +
   theme_classic() +
-  labs(title = "Covid-19 Global new_cases Cases", x= "Days", y= "Daily new_cases cases") +
+  labs(title = "Covid-19 US Cases", x= "Days", y= "Daily cases") +
   theme(plot.title = element_text(hjust = 0.5))
 # Ignore warning
+```
 
+```{r}
 # covid_data new_cases with counts in log10 scale
-ggplot(covid_data, aes(x=days, y=new_cases)) + geom_line() +
+ggplot(us_data, aes(x=as.numeric(days), y=as.numeric(new_cases))) + 
+  geom_line() +
   theme_classic() +
-  labs(title = "Covid-19 Global new_cases Cases", x= "Days", y= "Daily new_cases cases  (log scale)") +
+  labs(title = "Covid-19 US Cases", 
+       x= "Days", 
+       y= "Daily new_cases cases  (log scale)") +
   theme(plot.title = element_text(hjust = 0.5)) +
   scale_y_continuous(trans="log10")
+```
 
-# covid_data new_cases, new_deaths and recovered
-str(covid_data)
-covid_data %>% gather("Type", "Cases", -c(date, days)) %>%
-ggplot(aes(x=days, y=Cases, colour=Type)) + geom_line() +
+```{r}
+# covid_data new_cases, new_deaths
+state %>% 
+  gather("Type", "Cases", c(new_cases, new_deaths)) %>%
+  ggplot(aes(x=as.numeric(days), y=Cases, colour=Type)) + geom_line() +
   theme_classic() +
-  labs(title = "Covid-19 Global Cases", x= "Days", y= "Daily cases") +
+  labs(title = "Covid-19 US Cases", x= "Days", y= "Daily cases") +
   theme(plot.title = element_text(hjust = 0.5))
+```
 
-# new_cases by covid_data for select countries with counts in log10 scale
-covid_dataselection <- covid_data %>% filter(state==c("US", "Alabama", "China", "France", "United Kingdom", "Germany"))
-ggplot(covid_dataselection, aes(x=days, y=new_cases, colour=state)) + geom_line(size=1) +
+```{r}
+# cumulative cases by covid_data for select countries with counts in log10 scale
+state_selection <- state %>% 
+  filter(state==c("Alabama", "New York", "Texas", "California", "Nevada"))
+
+ggplot(state_selection, aes(x=as.numeric(days), y=cases, colour=state)) + 
+  geom_line(size=1) +
   theme_classic() +
-  labs(title = "Covid-19 new_cases Cases by covid_data", x= "Days", y= "Daily new_cases cases (log scale)") +
+  labs(title = "Covid-19 Cases by State", x= "Days", y= "Daily cases (log scale)") +
   theme(plot.title = element_text(hjust = 0.5)) +
   scale_y_continuous(trans="log10")
+```
 
+```{r}
 # Matrix of line graphs of new_cases, new_deaths and recovered for select countries in log10 scale
-str(covid_dataselection)
-covid_dataselection %>% gather("Type", "Cases", -c(date, days, state)) %>%
-ggplot(aes(x=days, y=Cases, colour=state)) + geom_line(size=1) +
+
+state_selection %>% gather("Type", "Cases", c(cases, deaths)) %>%
+ggplot(aes(x=as.numeric(days), y=Cases, colour=state)) + geom_line(size=1) +
   theme_classic() +
-  labs(title = "Covid-19 Cases by covid_data", x= "Days", y= "Daily cases (log scale)") +
+  labs(title = "Covid-19 Cases by State", x= "Days", y= "Daily cases (log scale)") +
   theme(plot.title = element_text(hjust = 0.5)) +
   scale_y_continuous(trans="log10") +
   facet_grid(rows=vars(Type))
+```
+
+
+```{r}
+# cumulative cases by covid_data for select countries with counts in log10 scale
+library(lubridate)
+new_york <- state %>% 
+  filter(state == "New York") %>%
+  filter((date >= mandate_start - days(30)))
+
+fitlm = lm(cases ~ date, data = texas)
+
+
+
+day_2 <- lubridate::ymd(new_york[1,]$mandate_start)
+day_3 <- lubridate::ymd(new_york[1,]$mandate_end)
+current_day <- lubridate::today()
+
+ggplot(new_york, aes(x=date, y=new_cases, colour=state)) + 
+  geom_line(size=1) +
+  geom_smooth(method = "lm", se = FALSE) +
+  annotate(geom = "vline",
+             x = c(day_2, day_3),
+             xintercept = c(day_2, day_3),
+             linetype = c("dashed", "solid")) +
+  theme_classic() +
+  labs(title = "Covid-19 Cases in Texas", x= "Days", y= "Daily cases") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(tidyverse) #read_csv 
+library(lubridate)
+library(usmap)
+library(viridis)
+
+#filter the covid data
+covid_sum <- covid_data %>% 
+  filter(date == as.Date("2020-05-31")) 
+
+us_map <- usmap::us_map(region = "states")
+
+#join data + visualize 
+usmap::plot_usmap(data = covid_sum, values = "deaths", color = "grey40") +
+  scale_fill_continuous(type='viridis', label = scales:: comma) +
+  labs(title = "COVID-19 - total number of deaths",
+       subtitle = "as of may 31, 2020",
+       caption = "data: NYT, author: George Deschamps", 
+       fill = "deaths (n)") + 
+  theme_classic()+
+  theme(panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        legend.position = "right",
+        axis.line = element_blank(), 
+        axis.ticks = element_blank(),
+        axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank())
+```
+
+```{r}
+# Download drought data by week and combine ####
+
+# Data from The National Drought Mitigation Center
+# at University of Nebraska-Lincoln
+# https://droughtmonitor.unl.edu/Data/GISData.aspx
+
+root_url <- "https://droughtmonitor.unl.edu/Data/GISData.aspx?mode=table&aoi=county&date="
+start <- as.Date("2000-01-04")
+end <- as.Date("2019-06-04")
+
+available_dates <- seq(from = start, to = end, by = "week")
+
+data_urls <- paste0(root_url, available_dates)
+
+combined_drought_data <- do.call(
+  "rbind",
+  lapply(
+    data_urls,
+    function(u) {
+      readr::read_csv(url(u))
+    }
+  )
+)
+
+colnames(combined_drought_data) <- c(
+  "week",
+  "fips",
+  "county",
+  "state_abbr",
+  "drought_none",
+  "d0",
+  "d1",
+  "d2",
+  "d3",
+  "d4",
+  "week_start",
+  "week_end",
+  "drought_total"
+)
+```
+
+```{r}
+combined_drought_data$drought_total <- with(
+  combined_drought_data, 
+  (d0 + d1 + d2 + d3 + d4) / 5
+)
+
+combined_drought_data$week_num <- as.numeric(
+  factor(combined_drought_data$week)
+)
+
+# Plot using usmap/ggplot2 ####
+
+library(usmap)
+library(ggplot2)
+library(RColorBrewer)
+
+# Create a folder called "Drought" on the Desktop
+# or set working directory here
+setwd("~/Desktop")
+
+for (week in as.character(available_dates)) {
+  current_data <- combined_drought_data[combined_drought_data$week == week, ]
+  
+  plot_usmap(
+    data = current_data[, c("fips", "drought_total")],
+    values = "drought_total",
+    lines = "#0e0e0e"
+  ) +
+  scale_fill_gradientn(
+    colours = c("#FFFFFF", RColorBrewer::brewer.pal(n = 9, name = "YlOrRd")),
+    na.value = "#FFFFFF",
+    limits = c(0, 100),
+    breaks = c(0, 25, 50, 75, 100),
+    name = "% of County"
+  ) +
+  theme(legend.position = "right") +
+  theme(plot.title = element_text(size = 16)) +
+  labs(title = "US Areas of Drought (% of county)",
+       subtitle = paste("Week of", week))
+  
+  ggsave(paste0("Drought/drought_plot_", week, ".png"),
+         height = 4.46, width = 6.42, units = "in")
+  
+  print(week)
+  flush.console()
+}
+```
+
