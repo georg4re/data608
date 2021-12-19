@@ -17,7 +17,6 @@ library(here)
 library(dplyr)
 library(ggplot2)
 library(scales)
-library(gganimate)
 
 covid_data <- read.csv(here('data', 
                             'processed_data',
@@ -52,7 +51,8 @@ ui <- fluidPage(
 
         # Show a plot of the generated distribution
         mainPanel(
-           plotOutput("distPlot")
+           plotOutput("distPlot"),
+           tableOutput('table')
         )
     )
 )
@@ -171,7 +171,93 @@ server <- function(input, output) {
                 theme(plot.title = element_text(hjust = 0.5))
         }
     )
+    
+    output$table <- renderTable({
+        state_data <- covid_data %>% 
+            filter(state == input$state)
+        start_date <- lubridate::ymd(state_data[1,]$mandate_start)
+        end_date <- lubridate::ymd(state_data[1,]$mandate_end)
+        new_york <- data.frame(Data=character(), Value=character(), RateOfChange = character())
+        
+        if (!is.na(start_date)) { 
+            before_mandate_start <- state_data %>% 
+                filter(((date >= mandate_start - days(14)) & 
+                            (date <= mandate_start))) %>% 
+                mutate(cases_rate = (cases - lag(cases))/lag(cases),
+                       deaths_rate = (deaths - lag(deaths))/lag(deaths),
+                       new_cases_rate = (new_cases - lag(new_cases))/lag(new_cases),
+                       new_deaths_rate = (new_deaths - lag(new_deaths))/lag(new_deaths)) %>%
+                select(c(state, mandate_start, mandate_end,cases, 
+                         deaths, 
+                         new_cases, 
+                         new_deaths,
+                         cases_rate, 
+                         deaths_rate,
+                         new_cases_rate,
+                         new_deaths_rate))
+            after_mandate_start <- state_data %>% filter(((date >= mandate_start) & 
+                                                              (date <= mandate_start + days(14))))%>% 
+                mutate(cases_rate = (cases - lag(cases))/lag(cases),
+                       deaths_rate = (deaths - lag(deaths))/lag(deaths),
+                       new_cases_rate = (new_cases - lag(new_cases))/lag(new_cases),
+                       new_deaths_rate = (new_deaths - lag(new_deaths))/lag(new_deaths)) %>%
+                select(c(state, mandate_start, mandate_end,cases, 
+                         deaths, 
+                         new_cases, 
+                         new_deaths,
+                         cases_rate, 
+                         deaths_rate,
+                         new_cases_rate,
+                         new_deaths_rate))
+            
+            new_york <- new_york %>% add_row(Data="Mask Mandate Start", Value=as.character(start_date)) %>%
+                add_row(Data="Cases before mandate start", Value=as.character(before_mandate_start[2,]$cases), RateOfChange =scales::percent(before_mandate_start[2,]$cases_rate)) %>%
+                add_row(Data="Cases after mandate start", Value=as.character(after_mandate_start[2,]$cases), RateOfChange =scales::percent(after_mandate_start[2,]$cases_rate))
+            
+        } else { 
+            new_york <- new_york %>% add_row(Data=input$state, Value="No Mask mandate was instituted in this state")
+        }
+        
+        if (!is.na(end_date)) {
+            before_mandate_end <- state_data %>% filter(
+                                                    (date >= mandate_end - days(30)) & 
+                                                    (date <= mandate_end
+                                                    ))%>% 
+                mutate(cases_rate = (cases - lag(cases))/lag(cases),
+                       deaths_rate = (deaths - lag(deaths))/lag(deaths),
+                       new_cases_rate = (new_cases - lag(new_cases))/lag(new_cases),
+                       new_deaths_rate = (new_deaths - lag(new_deaths))/lag(new_deaths)) %>%
+                select(c(state, mandate_start, mandate_end,cases, 
+                         deaths, 
+                         new_cases, 
+                         new_deaths,
+                         cases_rate, 
+                         deaths_rate,
+                         new_cases_rate,
+                         new_deaths_rate))
+            after_mandate_end <- state_data %>% filter(((date <= mandate_end + days(30)) & 
+                                                               (date >= mandate_end)))%>% 
+                mutate(cases_rate =  (cases - lag(cases))/lag(cases),
+                       deaths_rate =  (deaths - lag(deaths))/lag(deaths),
+                       new_cases_rate =  (new_cases - lag(new_cases))/lag(new_cases),
+                       new_deaths_rate =  (new_deaths - lag(new_deaths))/lag(new_deaths)) %>%
+                select(c(state, mandate_start, mandate_end,cases, 
+                         deaths, 
+                         new_cases, 
+                         new_deaths,
+                         cases_rate, 
+                         deaths_rate,
+                         new_cases_rate,
+                         new_deaths_rate))
+            
+            new_york <- new_york %>%  add_row(Data="Mask Mandate End", Value=as.character(end_date)) %>%
+                add_row(Data="Cases before mandate end", Value=as.character(before_mandate_end[2,]$cases), RateOfChange =scales::percent(before_mandate_end[2,]$cases_rate)) %>%
+                add_row(Data="Cases after mandate end", Value=as.character(after_mandate_end[2,]$cases), RateOfChange =scales::percent(after_mandate_end[2,]$cases_rate))
+        } 
+        new_york
+    })
 }
+
 
 # Run the application 
 shinyApp(ui = ui, server = server)
