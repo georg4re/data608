@@ -51,10 +51,10 @@ state <- covid_data %>%
   group_by(state) %>% 
   mutate(days = date - first(date) + 1)
 
-# Aggregate at world level
+# Aggregate at Country Level
 us_data <- state %>% 
   group_by(date) %>% 
-  summarize(new_cases=sum(new_cases), 
+  summarise(new_cases=sum(new_cases), 
             cases=sum(cases), 
             new_deaths=sum(new_deaths), 
             deaths = sum(deaths)) %>% 
