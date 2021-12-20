@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.2.8/d3.min.js" type="text/JavaScript"></script>
+    <style>
+      path {
+        fill: none;
+        /* stroke: #2e2928; */
+      }
+      div {
+        border-style: solid;
+      }
+    </style>
+  </head>
+  <body>
+
+    <img src="streamgraph.jpg" height="600px" width="1200px" />
+
+    <h3>Assignment 6: D3 lab</h3>
+    <h4>By: George Cruz</h4>
+
+    <h3>Question 1</h3>
+
+    <p>Edit the attached file <code>01answer.js</code> to display a line graph of Agricultural employment data.</p>
+
+    <p>I set the d3 function to select the <code>svg</code> tag below. Your graph should look like this image:</p>
+
+    <img src=linegraph.jpg height="600px" width="1200px" />
+
+    <div id="answer1div">
+      <svg id="answer1" style="width:1200px;height:600px;"></svg>
+    </div>
+    <script type="text/javascript" src="01answer.js"></script>
+
+    <h3>Question 2</h3>
+
+    <p>It seems like our our stream graph is being cut off at the bottom. Try to find out what is needed to display the graph centered in the div and edit <code>07offset.js</code> to correct this.</p>
+
+    <p>You may want to inspect what the data looks like. Try using <code>console.log</code> at any point in your code to print out the data. Then, enter developer mode, and see what prints out in the console.</p>
+
+    <div id="part7div">
+      <svg id="part7" style="width:1200px;height:600px;"></svg>
+    </div>
+    <script type="text/javascript" src="07offset.js"></script>
+
+  </body>
+</html>
+

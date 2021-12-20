@@ -1,0 +1,13 @@
+name: CovidTracker
+title: CovidTracker
+username:
+account: georgecd
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5350090
+bundleId: 5391735
+url: https://georgecd.shinyapps.io/CovidTracker/
+when: 1639963006.90152
+lastSyncTime: 1639963006.90152
+asMultiple: FALSE
+asStatic: FALSE
