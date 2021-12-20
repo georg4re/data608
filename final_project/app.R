@@ -46,7 +46,20 @@ ui <- fluidPage(
             selectizeInput('data', 'Variable', choices=c("Cumulative Cases", 
                                                          "Cumulative Deaths", 
                                                          "New Cases", 
-                                                         "New Deaths"))
+                                                         "New Deaths")),
+            h3("Summary"),
+            p("The tracker allows you to visualize the weekly covid cases around mask mandates."),
+            h4("The Data"),
+            p("We used “Data from The New York Times, based on reports from state and local health agencies.”"),
+            p("For the Mask Mandate information and the population data, we used the data from https://statepolicies.com/data/library/"),
+            h4("Methodology"),
+            p("We 'predicted' the cases by using a rate of change formula.  The Initial intention was to use the SIR Model for the spread of disease but we had missing information around susceptibility and recovered individuals in our data set to make it work. "),
+            p("For the table, we calculated the rate of change of the two weeks prior/after the mandate threshold."),
+            img(src = "images/death_plot_animation.gif", 
+                height = 70, width = 200),
+            br(),
+            "Shiny is a product of ", 
+            span("RStudio", style = "color:blue")
         ),
 
         # Show a plot of the generated distribution
@@ -158,11 +171,18 @@ server <- function(input, output) {
                 annotate(geom = "vline",
                          x = c(start_date, end_date),
                          xintercept = c(start_date, end_date),
+                         color = c("green", "orange"),
                          linetype = c("dashed", "dotdash")) +
                 theme_classic() +
                 theme(axis.text.x = element_text(face = "bold", color = "#993333", 
                                                  size = 10, angle = 45, hjust=1),
                       legend.position ="bottom") +
+                annotate(geom = "text",
+                         label = c("mandate starts", "mandate ends"),
+                         x = c(start_date, end_date),
+                         y = c(mean(data()), mean(data())),
+                         angle = 90, 
+                         vjust = 1) +
                 labs(title = paste("Covid-19 ",
                                    input$data, 
                                    " in ",
@@ -210,10 +230,17 @@ server <- function(input, output) {
                          new_cases_rate,
                          new_deaths_rate))
             
-            new_york <- new_york %>% add_row(Data="Mask Mandate Start", Value=as.character(start_date)) %>%
-                add_row(Data="Cases before mandate start", Value=as.character(before_mandate_start[2,]$cases), RateOfChange =scales::percent(before_mandate_start[2,]$cases_rate)) %>%
-                add_row(Data="Cases after mandate start", Value=as.character(after_mandate_start[2,]$cases), RateOfChange =scales::percent(after_mandate_start[2,]$cases_rate))
+            label <- gsub("Cumulative ","", input$data)
+            row_label <- tolower(gsub(" ","_", label))
+            rate_label <- paste(row_label, "rate", sep="_")
             
+            new_york <- new_york %>% add_row(Data="Mask Mandate Start", Value=as.character(start_date))%>% 
+                add_row(Data=paste(label, "before mandate start"), 
+                        Value=as.character(first(before_mandate_start[2,row_label])),
+                        RateOfChange =scales::percent(first(before_mandate_start[2,rate_label]))) %>%
+                add_row(Data=paste(label, "after mandate start"), 
+                        Value=as.character(first(after_mandate_start[2,row_label])), 
+                        RateOfChange =scales::percent(first(after_mandate_start[2,rate_label])))
         } else { 
             new_york <- new_york %>% add_row(Data=input$state, Value="No Mask mandate was instituted in this state")
         }
@@ -250,9 +277,18 @@ server <- function(input, output) {
                          new_cases_rate,
                          new_deaths_rate))
             
-            new_york <- new_york %>%  add_row(Data="Mask Mandate End", Value=as.character(end_date)) %>%
-                add_row(Data="Cases before mandate end", Value=as.character(before_mandate_end[2,]$cases), RateOfChange =scales::percent(before_mandate_end[2,]$cases_rate)) %>%
-                add_row(Data="Cases after mandate end", Value=as.character(after_mandate_end[2,]$cases), RateOfChange =scales::percent(after_mandate_end[2,]$cases_rate))
+            label <- gsub("Cumulative ","", input$data)
+            row_label <- tolower(gsub(" ","_", label))
+            rate_label <- paste(row_label, "rate", sep="_")
+            
+            new_york <- new_york %>%  add_row(Data="Mask Mandate End", 
+                                              Value=as.character(end_date)) %>%
+                add_row(Data=paste(label, "before mandate end"), 
+                        Value=as.character(first(before_mandate_end[2, row_label])), 
+                        RateOfChange =scales::percent(first(before_mandate_end[2,rate_label]))) %>%
+                add_row(Data=paste(label, "after mandate end"), 
+                        Value=as.character(first(after_mandate_end[2,row_label])), 
+                        RateOfChange =scales::percent(first(after_mandate_end[2,rate_label])))
         } 
         new_york
     })

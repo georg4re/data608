@@ -266,7 +266,6 @@ data_with_mandates %<>%
          new_cases_proyected = cases_proyected - lag(cases_proyected),
          new_deaths_proyected = deaths_proyected - lag(deaths_proyected)
   )
-
 write.csv(data_with_mandates, here('data', 
                             'processed_data',
                             'weekly_cases_data_plus_mandates-4.csv'))
